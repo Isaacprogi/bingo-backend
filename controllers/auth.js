@@ -87,7 +87,9 @@ const logout = (req, res, next) => {
 
 // Refresh token
 const refreshToken = async (req, res, next) => {
+     console.log('sjjsjs')
     const token = req.cookies.ref;
+    console.log(token)
     if (!token) {
         return res.status(200).json({
             accesstoken: '',
