@@ -88,13 +88,15 @@ const logout = (req, res, next) => {
 // Refresh token
 const refreshToken = async (req, res, next) => {
     const token = req.cookies.ref;
-    console.log(token)
+    // console.log(token)
+    console.log('sksk')
 
     if (!token) {
         return res.status(200).json({
             accesstoken: '',
         });
     }
+    console.log('shshsh')
 
     let payload;
     try {
