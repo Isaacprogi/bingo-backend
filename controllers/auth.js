@@ -77,7 +77,7 @@ const login = async (req, res, next) => {
 
 // Logout user
 const logout = (req, res, next) => {
-    res.clearCookie('ref', {httpOnly: false });
+    res.clearCookie('ref', {httpOnly: true });
     return res.json({
         message: 'Logged out',
     });
@@ -88,15 +88,11 @@ const logout = (req, res, next) => {
 // Refresh token
 const refreshToken = async (req, res, next) => {
     const token = req.cookies.ref;
-    // console.log(token)
-    console.log('sksk')
-
     if (!token) {
         return res.status(200).json({
             accesstoken: '',
         });
     }
-    console.log('shshsh')
 
     let payload;
     try {
