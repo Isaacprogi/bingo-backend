@@ -1,12 +1,13 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const { createAccessToken, createRefreshToken, sendAccessToken, sendRefreshToken } = require('../utils/token');
-const {validatePassword} = require('../utils/functions')
+const { validatePassword } = require('../utils/functions')
+const axios = require('axios')
 
 
 // Register user
 const register = async (req, res, next) => {
-    const {name, email, password, confirmPassword } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
 
     if (!name || !email || !password || !confirmPassword) {
         return next({ message: 'All fields are required' });
@@ -22,7 +23,7 @@ const register = async (req, res, next) => {
         const existEmail = await User.findOne({ email });
         if (existEmail) return next({ message: 'An account with this email exists' });
 
-        const user = new User({name,email, password});
+        const user = new User({ name, email, password });
 
         await user.save();
 
@@ -53,7 +54,7 @@ const login = async (req, res, next) => {
 
     try {
         const user = await User.findOne({ email });
-       
+
 
         if (!user) return next({ message: 'Invalid credentials' });
 
@@ -68,7 +69,7 @@ const login = async (req, res, next) => {
         await user.updateOne({ refreshtoken: refreshToken });
 
         sendRefreshToken(res, refreshToken);
-        const { password:userPassword, refreshtoken: reftoken, __v, ...others } = user._doc;
+        const { password: userPassword, refreshtoken: reftoken, __v, ...others } = user._doc;
         sendAccessToken(res, accessToken, others);
     } catch (error) {
         next({ message: 'Internal server error' })
@@ -77,7 +78,7 @@ const login = async (req, res, next) => {
 
 // Logout user
 const logout = (req, res, next) => {
-    res.clearCookie('ref', {httpOnly: true });
+    res.clearCookie('ref', { httpOnly: false });
     return res.json({
         message: 'Logged out',
     });
@@ -87,9 +88,8 @@ const logout = (req, res, next) => {
 
 // Refresh token
 const refreshToken = async (req, res, next) => {
-     console.log('sjjsjs')
     const token = req.cookies.ref;
-    console.log(token)
+
     if (!token) {
         return res.status(200).json({
             accesstoken: '',
@@ -125,10 +125,95 @@ const refreshToken = async (req, res, next) => {
 };
 
 
+const googleAuth = async (req, res, next) => {
+    const { code } = req.body;
+
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+        return next({ message: 'Server misconfiguration' });
+    }
+
+    try {
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code',
+        });
+
+        const { access_token } = tokenResponse.data;
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` },
+        });
+
+        const { name, email } = userInfoResponse.data;
+
+        if (!name || !email) {
+            return next({ message: 'Failed to retrieve essential user information' });
+        }
+
+        let user = await User.findOne({ email });
+        
+        if (!user) {
+        user = new User({ name, email }); 
+        await user.save();
+        }
+
+
+        const accessToken = createAccessToken(user.id);
+        const refreshToken = createRefreshToken(user.id);
+
+        await user.updateOne({ refreshtoken: refreshToken });
+    
+
+        sendRefreshToken(res, refreshToken);
+        const { __v, refreshToken: userRefreshToken, ...others } = user._doc;
+        console.log(userRefreshToken)
+        sendAccessToken(res, accessToken, others);
+    } catch (error) {
+        console.log(error)
+        next({ message: 'Internal Server Error' });
+    }
+};
+
+
+const facebookAuth = async (req, res, next) => {
+    try {
+        const { name, email } = req.body
+
+        if (!name || !email) {
+            return next({ message: 'Name and email is required' });
+        }
+
+        let user = await User.findOne({ email });
+        
+        if (!user) {
+        user = new User({ name, email }); 
+        await user.save();
+        }
+
+
+        const accessToken = createAccessToken(user.id);
+        const refreshToken = createRefreshToken(user.id);
+
+        await user.updateOne({ refreshtoken: refreshToken });
+    
+
+        sendRefreshToken(res, refreshToken);
+        const { __v, refreshToken: userRefreshToken, ...others } = user._doc;
+        console.log(userRefreshToken)
+        sendAccessToken(res, accessToken, others);
+    } catch (error) {
+        console.error(error);
+        next({ message: 'Internal Server Error' });
+    }
+};
 
 module.exports = {
     login,
     register,
     logout,
     refreshToken,
+    googleAuth,
+    facebookAuth
 };
