@@ -128,7 +128,7 @@ const refreshToken = async (req, res, next) => {
 const googleAuth = async (req, res, next) => {
     const { code } = req.body;
 
-    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI) {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI || !code) {
         return next({ message: 'Server misconfiguration' });
     }
 
