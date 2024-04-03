@@ -78,7 +78,7 @@ const login = async (req, res, next) => {
 
 // Logout user
 const logout = (req, res, next) => {
-    res.clearCookie('ref', { httpOnly: false });
+    res.clearCookie('ref', { httpOnly: true });
     return res.json({
         message: 'Logged out',
     });
