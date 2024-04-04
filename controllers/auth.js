@@ -127,7 +127,7 @@ const refreshToken = async (req, res, next) => {
 };
 
 
-const googleAuth = async (req, res, next) => {
+const googleRegister = async (req, res, next) => {
     const { code } = req.body;
 
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI || !code) {
@@ -179,6 +179,59 @@ const googleAuth = async (req, res, next) => {
 };
 
 
+
+const googleLogin = async (req, res, next) => {
+    const { code } = req.body;
+
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI || !code) {
+        return next({ message: 'Server misconfiguration' });
+    }
+
+    try {
+        const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+            code,
+            client_id: process.env.GOOGLE_CLIENT_ID,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET,
+            redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+            grant_type: 'authorization_code',
+        });
+
+        const { access_token } = tokenResponse.data;
+        const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: { Authorization: `Bearer ${access_token}` },
+        });
+
+        const { name, email } = userInfoResponse.data;
+
+        if (!name || !email) {
+            return next({ message: 'Failed to retrieve essential user information' });
+        }
+
+        let user = await User.findOne({ email });
+        
+        if (!user) return next({ message: 'Please register to log in' });
+
+
+        const accessToken = createAccessToken(user.id);
+        const refreshToken = createRefreshToken(user.id);
+
+        await user.updateOne({ refreshtoken: refreshToken });
+    
+
+        sendRefreshToken(res, refreshToken);
+        const { __v, refreshToken: userRefreshToken, ...others } = user._doc;
+        console.log(userRefreshToken)
+        sendAccessToken(res, accessToken, others);
+    } catch (error) {
+        console.log(error)
+        next({ message: 'Internal Server Error' });
+    }
+};
+
+
+
+
+
 const facebookAuth = async (req, res, next) => {
     try {
         const { name, email } = req.body
@@ -216,6 +269,7 @@ module.exports = {
     register,
     logout,
     refreshToken,
-    googleAuth,
+    googleRegister,
+    googleLogin,
     facebookAuth
 };
