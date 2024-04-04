@@ -76,9 +76,12 @@ const login = async (req, res, next) => {
     }
 };
 
+
+
 // Logout user
 const logout = (req, res, next) => {
-    res.clearCookie('ref', { httpOnly: true, secure: true, sameSite: 'None', path: '/' });
+    res.clearCookie('ref', { httpOnly: true,  path: '/' });
+    res.status(200).send('Logged out successfully');
 };
 
 
