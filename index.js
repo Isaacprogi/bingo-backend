@@ -10,10 +10,11 @@ const app = express();
 
 const port = process.env.PORT || 4000;
 
-const allowedOrigins = ['https://bingo-samp.vercel.app', `http://localhost:5173`];
+const allowedOrigins = ['https://bingo-samp-2.vercel.app', `http://localhost:5173`];
 
 const corsOptions = {
   origin: function (origin, callback) {
+       console.log(origin)
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
