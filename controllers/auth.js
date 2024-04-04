@@ -58,6 +58,10 @@ const login = async (req, res, next) => {
 
         if (!user) return next({ message: 'Invalid credentials' });
 
+        if (user.signupMethod === 'google') {
+            return next({ status: 400, message: 'Please log in using Google' });
+        }
+
         const match = await user.isMatch(password);
 
 
@@ -157,7 +161,7 @@ const googleRegister = async (req, res, next) => {
         let user = await User.findOne({ email });
         
         if (!user) {
-        user = new User({ name, email }); 
+        user = new User({ name, email, signupMethod:'google' }); 
         await user.save();
         }
 
