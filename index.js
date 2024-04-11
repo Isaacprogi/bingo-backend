@@ -35,7 +35,8 @@ const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 const bingoRoutes = require('./routes/bingo')
 const ticketRoutes = require('./routes/ticket')
-const paymentRoutes = require('./routes/payment')
+// const paymentRoutes = require('./routes/payment')
+const winnerRoutes = require('./routes/winner')
 
 
 
@@ -43,7 +44,8 @@ app.use('/api/user', userRoutes);
 app.use('/api/bingo', bingoRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/ticket', ticketRoutes);
-app.use('/api/payment', paymentRoutes);
+// app.use('/api/payment', paymentRoutes);
+app.use('/api/winner',winnerRoutes)
 
 
 

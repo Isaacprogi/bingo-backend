@@ -5,6 +5,7 @@ const { validatePassword } = require('../utils/functions')
 const axios = require('axios')
 
 
+
 // Register user
 const register = async (req, res, next) => {
     const { name, email, password, confirmPassword } = req.body;
@@ -131,6 +132,7 @@ const refreshToken = async (req, res, next) => {
 };
 
 
+
 const googleRegister = async (req, res, next) => {
     const { code } = req.body;
 
@@ -182,7 +184,7 @@ const googleRegister = async (req, res, next) => {
     }
 };
 
-
+ 
 
 const googleLogin = async (req, res, next) => {
     const { code } = req.body;
@@ -190,7 +192,7 @@ const googleLogin = async (req, res, next) => {
     if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET || !process.env.GOOGLE_REDIRECT_URI || !code) {
         return next({ message: 'Server misconfiguration' });
     }
-
+    
     try {
         const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
             code,

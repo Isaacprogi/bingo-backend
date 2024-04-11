@@ -22,7 +22,6 @@ const UserSchema = new Schema({
         enum: ['traditional', 'google', 'facebook'], 
         default: 'traditional',
     },
-    
     role: {
         type: String,
         required: true,
